@@ -33,7 +33,7 @@ def show_status(config: Config) -> None:
     table.add_column("Indexed Messages", justify="right")
 
     for platform in SUPPORTED_PLATFORMS:
-        is_connected = "✓" if platform in connected else "-"
+        is_connected = "[green]✓[/green]" if platform in connected else "[grey58]-[/grey58]"
         last = last_sync.get(platform, "-")
         result = collection.get(where={"platform": {"$eq": platform}}, include=[])
         count = len(result.get("ids", []))

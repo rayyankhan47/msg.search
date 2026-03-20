@@ -10,7 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from core import database
-from core.database import get_collection, insert_messages
+from core.database import get_collection, insert_messages, insert_messages_stream
 from core.embedder import Embedder
 
 
@@ -44,6 +44,20 @@ def generate_messages(count: int) -> list[dict]:
             }
         )
     return messages
+
+
+def generate_messages_stream(count: int):
+    random.seed(42)
+    for i in range(count):
+        content = " ".join(random.choices(WORDS, k=12))
+        yield {
+            "id": f"bench_stream:{i}",
+            "content": content,
+            "sender": f"user_{i % 25}",
+            "timestamp": f"2024-01-{(i % 28) + 1:02d}T12:00:00+00:00",
+            "platform": "benchmark",
+            "conversation": f"thread_{i % 120}",
+        }
 
 
 def benchmark_embedding_speed(message_count: int, batch_size: int) -> None:
@@ -134,11 +148,48 @@ def benchmark_search_latency(
     print(f"Target: under 500ms for 50,000 messages")
 
 
+def benchmark_large_stream(
+    message_count: int,
+    chunk_size: int,
+    batch_size: int,
+) -> None:
+    embedder = Embedder()
+    with tempfile.TemporaryDirectory() as tmpdir:
+        db_path = Path(tmpdir) / "db"
+        db_path.mkdir(parents=True, exist_ok=True)
+
+        with patch.object(database, "DB_DIR", db_path), patch.object(
+            database, "init_data_dir", lambda: None
+        ):
+            client = database.get_client()
+            try:
+                client.delete_collection(database.COLLECTION_NAME)
+            except Exception:
+                pass
+            database.get_collection()
+
+            started = time.perf_counter()
+            inserted = insert_messages_stream(
+                generate_messages_stream(message_count),
+                embedder=embedder,
+                chunk_size=chunk_size,
+                batch_size=batch_size,
+                platform_label="benchmark-large",
+            )
+            elapsed = time.perf_counter() - started
+
+    print(f"Streamed messages generated: {message_count}")
+    print(f"Messages inserted: {inserted}")
+    print(f"Elapsed: {elapsed:.2f}s")
+    print("Streaming mode avoids loading all messages into memory at once.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="msg.search benchmark tools")
-    parser.add_argument("--mode", choices=["embed", "search"], default="embed")
+    parser.add_argument("--mode", choices=["embed", "search", "large"], default="embed")
     parser.add_argument("--messages", type=int, default=10000)
     parser.add_argument("--batch-size", type=int, default=128)
+    parser.add_argument("--chunk-size", type=int, default=5000)
     parser.add_argument("--queries", type=int, default=20)
     parser.add_argument("--top-k", type=int, default=10)
     args = parser.parse_args()
@@ -151,6 +202,12 @@ def main() -> None:
             batch_size=args.batch_size,
             query_count=args.queries,
             top_k=args.top_k,
+        )
+    elif args.mode == "large":
+        benchmark_large_stream(
+            message_count=args.messages,
+            chunk_size=args.chunk_size,
+            batch_size=args.batch_size,
         )
 
 

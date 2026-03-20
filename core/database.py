@@ -1,5 +1,6 @@
 """ChromaDB helpers for persistent local storage."""
 
+from collections.abc import Iterable
 from chromadb import PersistentClient
 from chromadb.api.models.Collection import Collection
 from rich.progress import (
@@ -108,3 +109,37 @@ def insert_messages(
 
     print(f"Indexed {inserted} new messages, skipped {skipped} already indexed.")
     return inserted
+
+
+def insert_messages_stream(
+    messages: Iterable[dict],
+    embedder: Embedder | None = None,
+    chunk_size: int = 5000,
+    batch_size: int = 128,
+    platform_label: str = "messages",
+) -> int:
+    """Insert a large message iterable by streaming in chunks."""
+    active_embedder = embedder or Embedder()
+    chunk: list[dict] = []
+    total_inserted = 0
+
+    for message in messages:
+        chunk.append(message)
+        if len(chunk) >= chunk_size:
+            total_inserted += insert_messages(
+                chunk,
+                embedder=active_embedder,
+                batch_size=batch_size,
+                platform_label=platform_label,
+            )
+            chunk = []
+
+    if chunk:
+        total_inserted += insert_messages(
+            chunk,
+            embedder=active_embedder,
+            batch_size=batch_size,
+            platform_label=platform_label,
+        )
+
+    return total_inserted

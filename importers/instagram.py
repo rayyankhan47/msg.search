@@ -23,15 +23,18 @@ class InstagramImporter:
     def parse(self, filepath: str) -> list[dict]:
         path = Path(filepath)
         messages: list[dict] = []
+        seen_ids: set[str] = set()
         with ZipFile(path, "r") as archive:
-            for member in archive.namelist():
-                if not member.startswith("messages/inbox/"):
-                    continue
-                if not member.endswith(".json"):
-                    continue
-                if "/message_" not in member:
-                    continue
-
+            members = sorted(
+                [
+                    name
+                    for name in archive.namelist()
+                    if name.startswith("messages/inbox/")
+                    and name.endswith(".json")
+                    and "/message_" in name
+                ]
+            )
+            for member in members:
                 payload = json.loads(archive.read(member).decode("utf-8", errors="replace"))
                 conversation = payload.get("title") or Path(member).parts[-2]
                 conversation_key = re.sub(r"\s+", "_", conversation.lower())
@@ -50,12 +53,17 @@ class InstagramImporter:
                     ).isoformat()
                     sender_key = re.sub(r"\s+", "_", sender.lower())
                     content_hash = sha1(content.encode("utf-8")).hexdigest()[:10]
+                    message_id = (
+                        "instagram:"
+                        f"{conversation_key}:{timestamp_ms}:{sender_key}:{content_hash}"
+                    )
+                    if message_id in seen_ids:
+                        continue
+                    seen_ids.add(message_id)
+
                     messages.append(
                         {
-                            "id": (
-                                "instagram:"
-                                f"{conversation_key}:{timestamp_ms}:{sender_key}:{content_hash}"
-                            ),
+                            "id": message_id,
                             "content": content,
                             "sender": sender,
                             "timestamp": timestamp_iso,

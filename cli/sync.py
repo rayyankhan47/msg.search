@@ -16,6 +16,7 @@ from importers.telegram import TelegramImporter
 from importers.telegram_client import TelegramAuthError, TelegramClientManager
 from importers.whatsapp import WhatsAppImporter
 from utils.console import console
+from utils.config import Config
 
 
 DISCORD_TOS_DISCLAIMER = (
@@ -152,3 +153,32 @@ def sync_and_index_guided(platform: str, file_path: str | None = None) -> int:
     inserted = insert_messages(messages)
     console.print(f"[green]Synced {platform}: indexed {inserted} new messages.[/green]")
     return inserted
+
+
+def sync_all_connected(config: Config) -> dict[str, int]:
+    """Sync all previously connected platforms."""
+    connected = config.get("connected_platforms", [])
+    if not connected:
+        console.print("[yellow]No connected platforms yet. Run msgsearch sync <platform> first.[/yellow]")
+        return {}
+
+    summary: dict[str, int] = {}
+    primary = {"telegram", "whatsapp", "imessage"}
+    guided = {"instagram", "messenger", "discord"}
+
+    for platform in connected:
+        try:
+            if platform in primary:
+                summary[platform] = sync_and_index_primary(platform)
+            elif platform in guided:
+                summary[platform] = sync_and_index_guided(platform)
+            else:
+                console.print(f"[yellow]Skipping unknown platform: {platform}[/yellow]")
+        except Exception as exc:  # noqa: BLE001
+            console.print(f"[red]Failed syncing {platform}: {exc}[/red]")
+            summary[platform] = 0
+
+    console.print("[bold]Sync summary:[/bold]")
+    for platform, count in summary.items():
+        console.print(f"- {platform}: {count} new messages")
+    return summary

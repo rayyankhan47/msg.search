@@ -30,22 +30,43 @@ def insert_messages(
     embedder: Embedder | None = None,
     batch_size: int = 128,
 ) -> int:
-    """Insert message documents, metadata, and embeddings into ChromaDB."""
+    """Insert new messages only, skipping IDs that already exist."""
     if not messages:
         return 0
 
     collection = get_collection()
     active_embedder = embedder or Embedder()
     inserted = 0
+    skipped = 0
+    seen_ids: set[str] = set()
 
     for start in range(0, len(messages), batch_size):
-        batch = messages[start : start + batch_size]
+        raw_batch = messages[start : start + batch_size]
+        deduped_batch: list[dict] = []
+        for message in raw_batch:
+            message_id = str(message.get("id", ""))
+            if not message_id or message_id in seen_ids:
+                skipped += 1
+                continue
+            seen_ids.add(message_id)
+            deduped_batch.append(message)
+
+        batch = deduped_batch
         batch = [m for m in batch if m.get("content")]
+        skipped += len(deduped_batch) - len(batch)
         if not batch:
             continue
 
-        ids = [str(m["id"]) for m in batch]
-        documents = [str(m["content"]) for m in batch]
+        batch_ids = [str(m["id"]) for m in batch]
+        existing = collection.get(ids=batch_ids, include=[])
+        existing_ids = set(existing.get("ids", []))
+        new_batch = [m for m in batch if str(m["id"]) not in existing_ids]
+        skipped += len(batch) - len(new_batch)
+        if not new_batch:
+            continue
+
+        ids = [str(m["id"]) for m in new_batch]
+        documents = [str(m["content"]) for m in new_batch]
         embeddings = active_embedder.embed(documents)
         metadatas = [
             {
@@ -54,7 +75,7 @@ def insert_messages(
                 "platform": str(m.get("platform", "")),
                 "conversation": str(m.get("conversation", "")),
             }
-            for m in batch
+            for m in new_batch
         ]
 
         collection.add(
@@ -63,6 +84,7 @@ def insert_messages(
             embeddings=embeddings,
             metadatas=metadatas,
         )
-        inserted += len(batch)
+        inserted += len(new_batch)
 
+    print(f"Indexed {inserted} new messages, skipped {skipped} already indexed.")
     return inserted

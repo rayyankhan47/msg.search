@@ -67,6 +67,13 @@ def _prompt_export_path(platform: str) -> str:
     return typer.prompt(f"Path to your {platform} export file")
 
 
+def _require_existing_file(path_str: str) -> str:
+    path = Path(path_str)
+    if not path.exists():
+        raise FileNotFoundError(f"File not found: {path_str}")
+    return path_str
+
+
 def sync_primary_platforms(platform: str, file_path: str | None = None) -> list[dict]:
     """Sync Telegram, WhatsApp, and iMessage."""
     platform = platform.lower().strip()
@@ -90,7 +97,7 @@ def sync_primary_platforms(platform: str, file_path: str | None = None) -> list[
 
     if platform == "whatsapp":
         export_path = file_path or _prompt_export_path("WhatsApp")
-        return WhatsAppImporter().parse(export_path)
+        return WhatsAppImporter().parse(_require_existing_file(export_path))
 
     if platform == "imessage":
         return iMessageImporter().parse()
@@ -135,7 +142,7 @@ def sync_guided_platforms(platform: str, file_path: str | None = None) -> list[d
             if not has_file:
                 return None
             file_path = typer.prompt("Path to your Instagram export ZIP")
-        return InstagramImporter().parse(file_path)
+        return InstagramImporter().parse(_require_existing_file(file_path))
 
     if platform == "messenger":
         if not file_path:
@@ -144,7 +151,7 @@ def sync_guided_platforms(platform: str, file_path: str | None = None) -> list[d
             if not has_file:
                 return None
             file_path = typer.prompt("Path to your Messenger export ZIP")
-        return MessengerImporter().parse(file_path)
+        return MessengerImporter().parse(_require_existing_file(file_path))
 
     if platform == "discord":
         return sync_discord(file_path=file_path)
@@ -239,9 +246,17 @@ def sync_single_platform(config: Config, platform: str, file_path: str | None = 
     primary = {"telegram", "whatsapp", "imessage"}
     guided = {"instagram", "messenger", "discord"}
     if platform in primary:
-        inserted = sync_and_index_primary(platform, file_path=resolved_file_path)
+        try:
+            inserted = sync_and_index_primary(platform, file_path=resolved_file_path)
+        except FileNotFoundError as exc:
+            console.print(f"[red]{exc}[/red]")
+            return 0
     elif platform in guided:
-        inserted = sync_and_index_guided(platform, file_path=resolved_file_path)
+        try:
+            inserted = sync_and_index_guided(platform, file_path=resolved_file_path)
+        except FileNotFoundError as exc:
+            console.print(f"[red]{exc}[/red]")
+            return 0
     else:
         raise ValueError(f"Unsupported platform: {platform}")
 

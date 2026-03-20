@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from hashlib import sha1
 from datetime import datetime
 from pathlib import Path
 from zipfile import ZipFile
@@ -68,7 +69,32 @@ class WhatsAppImporter:
                 }
             )
 
-        return parsed
+        normalized: list[dict] = []
+        for item in parsed:
+            message = item["message"]
+            if message.lower().startswith("messages and calls are end-to-end encrypted"):
+                continue
+
+            sender = item["sender"].strip()
+            conversation_name = item["conversation"].strip()
+            timestamp_iso = item["timestamp"]
+            timestamp_ms = int(datetime.fromisoformat(timestamp_iso).timestamp() * 1000)
+            sender_key = re.sub(r"\s+", "_", sender.lower())
+            conversation_key = re.sub(r"\s+", "_", conversation_name.lower())
+            content_hash = sha1(message.encode("utf-8")).hexdigest()[:10]
+
+            normalized.append(
+                {
+                    "id": f"whatsapp:{conversation_key}:{timestamp_ms}:{sender_key}:{content_hash}",
+                    "content": message,
+                    "sender": sender,
+                    "timestamp": timestamp_iso,
+                    "platform": "whatsapp",
+                    "conversation": conversation_name,
+                }
+            )
+
+        return normalized
 
     @staticmethod
     def _parse_datetime(date_part: str, time_part: str, ampm: str | None) -> str | None:

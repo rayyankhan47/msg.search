@@ -20,3 +20,5 @@ dist/
 
 context.md
 *.egg-info/
+
+PRODUCTION_READINESS.md

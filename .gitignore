@@ -12,3 +12,11 @@ project_details.md
 .env.local
 .env.development.local
 .env.test.local
+
+__pycache__
+*.pyc
+dist/
+~/.msgsearch/
+
+context.md
+*.egg-info/

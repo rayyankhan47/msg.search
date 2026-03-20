@@ -27,7 +27,7 @@ DISCORD_TOS_DISCLAIMER = (
     "violations. By proceeding, you confirm you take full responsibility for how you "
     "obtained this file."
 )
-EXPORT_BASED_PLATFORMS = {"whatsapp", "instagram", "messenger", "discord"}
+EXPORT_BASED_PLATFORMS = {"whatsapp", "instagram", "messenger"}
 
 
 def sync_discord(file_path: str | None = None) -> list[dict] | None:

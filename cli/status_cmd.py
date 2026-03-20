@@ -34,7 +34,8 @@ def show_status(config: Config) -> None:
     for platform in SUPPORTED_PLATFORMS:
         is_connected = "✓" if platform in connected else "-"
         last = last_sync.get(platform, "-")
-        count = collection.count(where={"platform": {"$eq": platform}})
+        result = collection.get(where={"platform": {"$eq": platform}}, include=[])
+        count = len(result.get("ids", []))
         table.add_row(platform, is_connected, last, str(count))
 
     console.print(table)

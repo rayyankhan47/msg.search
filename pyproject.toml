@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "msgsearch"
+version = "0.1.0"
+description = "Local-first semantic search for personal messages."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "typer",
+  "rich",
+  "chromadb",
+  "sentence-transformers",
+  "torch",
+]
+
+[project.scripts]
+msgsearch = "main:app"
+
+[tool.setuptools]
+py-modules = ["main"]

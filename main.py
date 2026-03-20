@@ -44,6 +44,15 @@ def search(
         before=before,
         limit=limit,
     )
+    if not results:
+        if config and not config.get("connected_platforms", []):
+            console.print("[yellow]No data indexed yet. Run msgsearch sync <platform> first.[/yellow]")
+        else:
+            console.print(
+                "[yellow]No messages found. Try broader terms, removing filters, "
+                "or syncing more platforms.[/yellow]"
+            )
+        return
     display_results(results)
 
 

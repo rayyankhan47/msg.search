@@ -40,7 +40,11 @@ class MetaZipImporterBase:
             )
 
             for member in members:
-                payload = json.loads(archive.read(member).decode("utf-8", errors="replace"))
+                try:
+                    payload = json.loads(archive.read(member).decode("utf-8", errors="replace"))
+                except json.JSONDecodeError:
+                    # Skip malformed files and continue parsing other conversations.
+                    continue
                 conversation = payload.get("title") or Path(member).parts[-2]
                 conversation_key = re.sub(r"\s+", "_", conversation.lower())
 

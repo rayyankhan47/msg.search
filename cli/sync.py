@@ -256,11 +256,17 @@ def sync_single_platform(config: Config, platform: str, file_path: str | None = 
                 console.print("[red]iMessage is only available on macOS.[/red]")
                 return 0
             raise
+        except Exception as exc:  # noqa: BLE001
+            console.print(f"[red]Could not parse import file: {exc}[/red]")
+            return 0
     elif platform in guided:
         try:
             inserted = sync_and_index_guided(platform, file_path=resolved_file_path)
         except FileNotFoundError as exc:
             console.print(f"[red]{exc}[/red]")
+            return 0
+        except Exception as exc:  # noqa: BLE001
+            console.print(f"[red]Could not parse import file: {exc}[/red]")
             return 0
     else:
         raise ValueError(f"Unsupported platform: {platform}")

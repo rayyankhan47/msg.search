@@ -2,7 +2,7 @@
 
 import typer
 
-from cli.search_cmd import run_search
+from cli.search_cmd import display_results, run_search
 from cli.sync import sync_all_connected, sync_single_platform
 from utils.config import Config
 from utils.console import console
@@ -44,7 +44,7 @@ def search(
         before=before,
         limit=limit,
     )
-    typer.echo(f"Found {len(results)} results.")
+    display_results(results)
 
 
 @app.command()

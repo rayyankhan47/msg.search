@@ -31,3 +31,17 @@ class Embedder:
             spinner="dots",
         ):
             return SentenceTransformer(self.model_name)
+
+    def embed(self, texts: list[str], batch_size: int = 64) -> list[list[float]]:
+        """Embed input texts and return vectors as plain lists."""
+        if not texts:
+            return []
+
+        vectors = self.model.encode(
+            texts,
+            batch_size=batch_size,
+            convert_to_numpy=True,
+            show_progress_bar=False,
+            normalize_embeddings=True,
+        )
+        return vectors.tolist()

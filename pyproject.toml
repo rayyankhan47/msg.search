@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-msgsearch = "main:app"
+msgsearch = "main:run"
 
 [tool.setuptools]
 py-modules = ["main"]

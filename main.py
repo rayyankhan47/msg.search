@@ -1,5 +1,6 @@
 """msgsearch CLI entrypoint."""
 
+from rich.panel import Panel
 import typer
 
 from cli.search_cmd import display_results, run_search
@@ -91,6 +92,24 @@ def reset(platform: str = typer.Option(None, "--platform")) -> None:
     config = Config()
 
 
+def run() -> None:
+    """Run CLI with top-level error handling."""
+    try:
+        app()
+    except Exception as exc:  # noqa: BLE001
+        console.print(
+            Panel(
+                (
+                    f"[bold red]Unexpected error:[/bold red] {exc}\n\n"
+                    "Please file an issue on GitHub with the command you ran."
+                ),
+                title="msg.search error",
+                border_style="red",
+            )
+        )
+        raise typer.Exit(code=1)
+
+
 if __name__ == "__main__":
-    app()
+    run()
 

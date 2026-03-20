@@ -15,7 +15,34 @@ class DiscordImporter:
 
     def parse(self, filepath: str) -> list[dict]:
         payload = self._load_payload(filepath)
-        return payload["messages"]
+        channel = payload.get("channel", {}) or {}
+        conversation = channel.get("name") or "Discord DM"
+
+        normalized: list[dict] = []
+        for message in payload["messages"]:
+            content = message.get("content")
+            if not isinstance(content, str) or not content.strip():
+                continue
+
+            message_id = str(message.get("id", "")).strip()
+            if not message_id:
+                continue
+
+            author = message.get("author", {}) or {}
+            sender = str(author.get("name", "Unknown"))
+            timestamp = str(message.get("timestamp", ""))
+
+            normalized.append(
+                {
+                    "id": f"discord:{message_id}",
+                    "content": content.strip(),
+                    "sender": sender,
+                    "timestamp": timestamp,
+                    "platform": "discord",
+                    "conversation": conversation,
+                }
+            )
+        return normalized
 
     def _load_payload(self, filepath: str) -> dict:
         path = Path(filepath)

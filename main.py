@@ -2,6 +2,8 @@
 
 import typer
 
+from cli.search_cmd import run_search
+from cli.sync import sync_all_connected, sync_single_platform
 from utils.config import Config
 from utils.console import console
 from utils.storage import DATA_DIR, init_data_dir
@@ -25,15 +27,35 @@ def startup() -> None:
 
 
 @app.command()
-def search(query: str) -> None:
+def search(
+    query: str,
+    platform: str = typer.Option(None, "--platform"),
+    from_: str = typer.Option(None, "--from"),
+    after: str = typer.Option(None, "--after"),
+    before: str = typer.Option(None, "--before"),
+    limit: int = typer.Option(20, "--limit"),
+) -> None:
     """Search indexed messages."""
-    typer.echo("not yet implemented")
+    results = run_search(
+        query=query,
+        platform=platform,
+        from_=from_,
+        after=after,
+        before=before,
+        limit=limit,
+    )
+    typer.echo(f"Found {len(results)} results.")
 
 
 @app.command()
-def sync(platform: str) -> None:
+def sync(platform: str, file: str = typer.Option(None, "--file", "--path")) -> None:
     """Sync or import messages for a platform."""
-    typer.echo("not yet implemented")
+    if config is None:
+        raise RuntimeError("Config not loaded.")
+    if platform == "all":
+        sync_all_connected(config)
+    else:
+        sync_single_platform(config, platform=platform, file_path=file)
 
 
 @app.command()

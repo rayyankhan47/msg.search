@@ -8,12 +8,19 @@ Search your personal message history across platforms, locally.
 
 ## Supported platforms (v1)
 
-- Telegram ✈️
-- WhatsApp 🟢
-- iMessage 🍎💬 (macOS only)
-- Instagram 📸
-- Messenger 💙
-- Discord 👾
+<p>
+  <img src="https://cdn.simpleicons.org/telegram" height="18" alt="Telegram" /> Telegram
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/whatsapp" height="18" alt="WhatsApp" /> WhatsApp
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/apple" height="18" alt="Apple" /> iMessage (macOS only)
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/instagram" height="18" alt="Instagram" /> Instagram
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/messenger" height="18" alt="Messenger" /> Messenger
+  &nbsp;&nbsp;
+  <img src="https://cdn.simpleicons.org/discord" height="18" alt="Discord" /> Discord
+</p>
 
 ## Install
 

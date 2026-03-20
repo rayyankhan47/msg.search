@@ -15,16 +15,12 @@ class Embedder:
         self.model_name = model_name
         self.model = self._load_model()
 
-    def _is_model_cached(self) -> bool:
-        try:
-            SentenceTransformer(self.model_name, local_files_only=True)
-            return True
-        except Exception:
-            return False
-
     def _load_model(self) -> SentenceTransformer:
-        if self._is_model_cached():
-            return SentenceTransformer(self.model_name)
+        try:
+            # Fast path: use only local cache if already downloaded.
+            return SentenceTransformer(self.model_name, local_files_only=True)
+        except Exception:
+            pass
 
         with console.status(
             "Downloading embedding model (one-time, ~80MB)...",

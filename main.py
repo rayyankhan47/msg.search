@@ -58,10 +58,10 @@ def _ensure_database_health() -> None:
 @app.command()
 def search(
     query: str,
-    platform: str = typer.Option(None, "--platform"),
-    from_: str = typer.Option(None, "--from"),
-    after: str = typer.Option(None, "--after"),
-    before: str = typer.Option(None, "--before"),
+    platform: str | None = typer.Option(None, "--platform"),
+    from_: str | None = typer.Option(None, "--from"),
+    after: str | None = typer.Option(None, "--after"),
+    before: str | None = typer.Option(None, "--before"),
     limit: int = typer.Option(20, "--limit"),
 ) -> None:
     """Search indexed messages."""
@@ -86,7 +86,7 @@ def search(
 
 
 @app.command()
-def sync(platform: str, file: str = typer.Option(None, "--file", "--path")) -> None:
+def sync(platform: str, file: str | None = typer.Option(None, "--file", "--path")) -> None:
     """Sync or import messages for a platform."""
     if config is None:
         raise RuntimeError("Config not loaded.")

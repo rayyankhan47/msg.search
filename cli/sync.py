@@ -214,13 +214,24 @@ def sync_all_connected(config: Config) -> dict[str, int]:
     summary: dict[str, int] = {}
     primary = {"telegram", "whatsapp", "imessage"}
     guided = {"instagram", "messenger", "discord"}
+    export_based = {"whatsapp", "instagram", "messenger", "discord"}
+    last_paths = dict(config.get("last_import_path", {}))
 
     for platform in connected:
         try:
+            file_path = last_paths.get(platform)
+            if platform in export_based and not file_path:
+                console.print(
+                    f"[yellow]Skipping {platform}: no cached export path. "
+                    "Run sync manually with --file first.[/yellow]"
+                )
+                summary[platform] = 0
+                continue
+
             if platform in primary:
-                summary[platform] = sync_and_index_primary(platform)
+                summary[platform] = sync_and_index_primary(platform, file_path=file_path)
             elif platform in guided:
-                summary[platform] = sync_and_index_guided(platform)
+                summary[platform] = sync_and_index_guided(platform, file_path=file_path)
             else:
                 console.print(f"[yellow]Skipping unknown platform: {platform}[/yellow]")
                 continue

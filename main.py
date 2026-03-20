@@ -1,0 +1,2 @@
+"""msgsearch CLI entrypoint."""
+

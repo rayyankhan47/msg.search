@@ -5,6 +5,7 @@ from __future__ import annotations
 import platform
 import sqlite3
 from datetime import datetime, timedelta, timezone
+from hashlib import sha1
 from pathlib import Path
 
 
@@ -18,7 +19,15 @@ class iMessageImporter:
             raise RuntimeError("iMessage is only available on macOS.")
 
         db_path = Path(filepath) if filepath else self.DB_PATH
-        connection = sqlite3.connect(str(db_path))
+        try:
+            connection = sqlite3.connect(str(db_path))
+        except sqlite3.OperationalError as exc:
+            if "permission" in str(exc).lower():
+                raise RuntimeError(
+                    "Permission denied. Go to System Preferences -> Privacy & Security "
+                    "-> Full Disk Access and add your terminal."
+                ) from exc
+            raise
         try:
             return self._query_messages(connection)
         finally:
@@ -44,14 +53,24 @@ class iMessageImporter:
         rows = cursor.fetchall()
         messages: list[dict] = []
         for guid, text, is_from_me, handle_id, raw_date, display_name in rows:
+            if not text:
+                continue
+
             timestamp = self._apple_time_to_iso(raw_date)
+            sender = "Me" if is_from_me else (handle_id or "Unknown")
+            fallback_hash = sha1(f"{sender}|{timestamp}|{text}".encode("utf-8")).hexdigest()[:12]
+            message_id = guid or f"imessage:{fallback_hash}"
             messages.append(
                 {
-                    "guid": guid,
+                    "id": (
+                        f"imessage:{message_id}"
+                        if not str(message_id).startswith("imessage:")
+                        else str(message_id)
+                    ),
                     "content": text,
-                    "is_from_me": bool(is_from_me),
-                    "handle_id": handle_id,
+                    "sender": sender,
                     "timestamp": timestamp,
+                    "platform": "imessage",
                     "conversation": display_name or "iMessage",
                 }
             )

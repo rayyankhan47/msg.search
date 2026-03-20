@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
+import webbrowser
 
 import typer
 
 from core.database import insert_messages
 from importers.discord import DiscordImporter, InvalidFormatError
 from importers.imessage import iMessageImporter
+from importers.instagram import InstagramImporter
+from importers.messenger import MessengerImporter
 from importers.telegram import TelegramImporter
 from importers.telegram_client import TelegramAuthError, TelegramClientManager
 from importers.whatsapp import WhatsAppImporter
@@ -94,6 +97,58 @@ def sync_primary_platforms(platform: str, file_path: str | None = None) -> list[
 def sync_and_index_primary(platform: str, file_path: str | None = None) -> int:
     """Sync one primary platform and insert its new messages."""
     messages = sync_primary_platforms(platform, file_path=file_path)
+    inserted = insert_messages(messages)
+    console.print(f"[green]Synced {platform}: indexed {inserted} new messages.[/green]")
+    return inserted
+
+
+def _guided_meta_flow(platform: str) -> None:
+    if platform == "instagram":
+        url = "https://www.instagram.com/accounts/privacy_and_security/"
+        typer.echo("To sync Instagram messages, request a new Meta data export (JSON, Messages).")
+    else:
+        url = "https://www.facebook.com/dyi/"
+        typer.echo("To sync Messenger messages, request a new Meta data export (JSON, Messages).")
+
+    open_browser = typer.confirm("Open settings page in browser now?", default=True)
+    if open_browser:
+        webbrowser.open(url)
+
+
+def sync_guided_platforms(platform: str, file_path: str | None = None) -> list[dict] | None:
+    """Sync Instagram, Messenger, or Discord via guided file flow."""
+    platform = platform.lower().strip()
+
+    if platform == "instagram":
+        if not file_path:
+            _guided_meta_flow("instagram")
+            has_file = typer.confirm("Do you already have the Instagram export ZIP?", default=False)
+            if not has_file:
+                return None
+            file_path = typer.prompt("Path to your Instagram export ZIP")
+        return InstagramImporter().parse(file_path)
+
+    if platform == "messenger":
+        if not file_path:
+            _guided_meta_flow("messenger")
+            has_file = typer.confirm("Do you already have the Messenger export ZIP?", default=False)
+            if not has_file:
+                return None
+            file_path = typer.prompt("Path to your Messenger export ZIP")
+        return MessengerImporter().parse(file_path)
+
+    if platform == "discord":
+        return sync_discord(file_path=file_path)
+
+    raise ValueError(f"Unsupported guided platform: {platform}")
+
+
+def sync_and_index_guided(platform: str, file_path: str | None = None) -> int:
+    """Sync guided platform and index parsed messages."""
+    messages = sync_guided_platforms(platform, file_path=file_path)
+    if not messages:
+        console.print(f"[yellow]No new data synced for {platform}.[/yellow]")
+        return 0
     inserted = insert_messages(messages)
     console.print(f"[green]Synced {platform}: indexed {inserted} new messages.[/green]")
     return inserted

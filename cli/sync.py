@@ -251,6 +251,11 @@ def sync_single_platform(config: Config, platform: str, file_path: str | None = 
         except FileNotFoundError as exc:
             console.print(f"[red]{exc}[/red]")
             return 0
+        except RuntimeError as exc:
+            if "iMessage is only available on macOS." in str(exc):
+                console.print("[red]iMessage is only available on macOS.[/red]")
+                return 0
+            raise
     elif platform in guided:
         try:
             inserted = sync_and_index_guided(platform, file_path=resolved_file_path)

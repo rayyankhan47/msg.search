@@ -13,7 +13,7 @@ Search your personal message history across platforms, locally.
   &nbsp;&nbsp;
   <img src="https://cdn.simpleicons.org/whatsapp" height="18" alt="WhatsApp" /> WhatsApp
   &nbsp;&nbsp;
-  <img src="https://cdn.simpleicons.org/apple" height="18" alt="Apple" /> iMessage (macOS only)
+  <img src="https://cdn.simpleicons.org/apple/9ca3af" height="18" alt="Apple" /> iMessage (macOS only)
   &nbsp;&nbsp;
   <img src="https://cdn.simpleicons.org/instagram" height="18" alt="Instagram" /> Instagram
   &nbsp;&nbsp;

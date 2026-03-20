@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from pathlib import Path
 import webbrowser
+from datetime import datetime, timezone
+import time
 
 import typer
 
@@ -97,9 +99,14 @@ def sync_primary_platforms(platform: str, file_path: str | None = None) -> list[
 
 def sync_and_index_primary(platform: str, file_path: str | None = None) -> int:
     """Sync one primary platform and insert its new messages."""
+    started = time.perf_counter()
     messages = sync_primary_platforms(platform, file_path=file_path)
     inserted = insert_messages(messages, platform_label=platform)
-    console.print(f"[green]Synced {platform}: indexed {inserted} new messages.[/green]")
+    elapsed = time.perf_counter() - started
+    console.print(
+        f"[green]Synced {platform}: parsed {len(messages)}, indexed {inserted}, "
+        f"time {elapsed:.1f}s.[/green]"
+    )
     return inserted
 
 
@@ -146,13 +153,30 @@ def sync_guided_platforms(platform: str, file_path: str | None = None) -> list[d
 
 def sync_and_index_guided(platform: str, file_path: str | None = None) -> int:
     """Sync guided platform and index parsed messages."""
+    started = time.perf_counter()
     messages = sync_guided_platforms(platform, file_path=file_path)
     if not messages:
         console.print(f"[yellow]No new data synced for {platform}.[/yellow]")
         return 0
     inserted = insert_messages(messages, platform_label=platform)
-    console.print(f"[green]Synced {platform}: indexed {inserted} new messages.[/green]")
+    elapsed = time.perf_counter() - started
+    console.print(
+        f"[green]Synced {platform}: parsed {len(messages)}, indexed {inserted}, "
+        f"time {elapsed:.1f}s.[/green]"
+    )
     return inserted
+
+
+def update_config_after_sync(config: Config, platform: str) -> None:
+    """Mark platform connected and update last sync timestamp."""
+    connected = list(config.get("connected_platforms", []))
+    if platform not in connected:
+        connected.append(platform)
+        config.set("connected_platforms", connected)
+
+    last_sync = dict(config.get("last_sync", {}))
+    last_sync[platform] = datetime.now(timezone.utc).isoformat()
+    config.set("last_sync", last_sync)
 
 
 def sync_all_connected(config: Config) -> dict[str, int]:
@@ -174,6 +198,8 @@ def sync_all_connected(config: Config) -> dict[str, int]:
                 summary[platform] = sync_and_index_guided(platform)
             else:
                 console.print(f"[yellow]Skipping unknown platform: {platform}[/yellow]")
+                continue
+            update_config_after_sync(config, platform)
         except Exception as exc:  # noqa: BLE001
             console.print(f"[red]Failed syncing {platform}: {exc}[/red]")
             summary[platform] = 0
@@ -182,3 +208,22 @@ def sync_all_connected(config: Config) -> dict[str, int]:
     for platform, count in summary.items():
         console.print(f"- {platform}: {count} new messages")
     return summary
+
+
+def sync_single_platform(config: Config, platform: str, file_path: str | None = None) -> int:
+    """Sync one platform and persist config updates."""
+    platform = platform.lower().strip()
+    if platform == "all":
+        raise ValueError("Use sync_all_connected for 'all'.")
+
+    primary = {"telegram", "whatsapp", "imessage"}
+    guided = {"instagram", "messenger", "discord"}
+    if platform in primary:
+        inserted = sync_and_index_primary(platform, file_path=file_path)
+    elif platform in guided:
+        inserted = sync_and_index_guided(platform, file_path=file_path)
+    else:
+        raise ValueError(f"Unsupported platform: {platform}")
+
+    update_config_after_sync(config, platform)
+    return inserted

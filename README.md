@@ -185,6 +185,25 @@ Exporting Discord messages with third-party tools may violate Discord Terms of S
 The creator of `msg.search` does not endorse or facilitate ToS violations.  
 You are fully responsible for how your export file was obtained.
 
+## Performance Expectations
+
+Performance depends on machine specs, data distribution, and model cache state.  
+Use:
+
+```bash
+python3 scripts/benchmark.py --mode embed --messages 10000 --batch-size 128
+python3 scripts/benchmark.py --mode search --messages 50000 --queries 20 --top-k 10
+```
+
+Current indicative local run (small sample) showed:
+
+- Embedding + insert throughput: ~199 messages/sec (`200` message run)
+- Average query latency: ~0.86 ms (`500` indexed messages, `5` queries)
+
+Practical expectation target for v1:
+
+- Search latency should remain under `500ms` around `50,000` indexed messages.
+
 ## Status
 
 Active development. See `project_plan.md` for build phases and progress.

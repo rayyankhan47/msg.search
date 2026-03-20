@@ -10,6 +10,7 @@ from utils.storage import DATA_DIR
 DEFAULT_CONFIG: dict[str, Any] = {
     "connected_platforms": [],
     "last_sync": {},
+    "last_import_path": {},
     "model_downloaded": False,
 }
 

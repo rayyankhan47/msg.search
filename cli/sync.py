@@ -27,6 +27,7 @@ DISCORD_TOS_DISCLAIMER = (
     "violations. By proceeding, you confirm you take full responsibility for how you "
     "obtained this file."
 )
+EXPORT_BASED_PLATFORMS = {"whatsapp", "instagram", "messenger", "discord"}
 
 
 def sync_discord(file_path: str | None = None) -> list[dict] | None:
@@ -179,6 +180,23 @@ def update_config_after_sync(config: Config, platform: str) -> None:
     config.set("last_sync", last_sync)
 
 
+def _resolve_export_file_path(config: Config, platform: str, provided: str | None) -> str | None:
+    if platform not in EXPORT_BASED_PLATFORMS:
+        return provided
+    if provided:
+        return provided
+
+    last_paths = dict(config.get("last_import_path", {}))
+    previous = last_paths.get(platform)
+    if previous and Path(previous).exists():
+        return typer.prompt(
+            f"Path to your {platform} export file",
+            default=previous,
+            show_default=True,
+        )
+    return typer.prompt(f"Path to your {platform} export file")
+
+
 def sync_all_connected(config: Config) -> dict[str, int]:
     """Sync all previously connected platforms."""
     connected = config.get("connected_platforms", [])
@@ -216,14 +234,20 @@ def sync_single_platform(config: Config, platform: str, file_path: str | None = 
     if platform == "all":
         raise ValueError("Use sync_all_connected for 'all'.")
 
+    resolved_file_path = _resolve_export_file_path(config, platform, file_path)
+
     primary = {"telegram", "whatsapp", "imessage"}
     guided = {"instagram", "messenger", "discord"}
     if platform in primary:
-        inserted = sync_and_index_primary(platform, file_path=file_path)
+        inserted = sync_and_index_primary(platform, file_path=resolved_file_path)
     elif platform in guided:
-        inserted = sync_and_index_guided(platform, file_path=file_path)
+        inserted = sync_and_index_guided(platform, file_path=resolved_file_path)
     else:
         raise ValueError(f"Unsupported platform: {platform}")
 
     update_config_after_sync(config, platform)
+    if platform in EXPORT_BASED_PLATFORMS and resolved_file_path:
+        last_paths = dict(config.get("last_import_path", {}))
+        last_paths[platform] = resolved_file_path
+        config.set("last_import_path", last_paths)
     return inserted

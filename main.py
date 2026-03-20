@@ -3,6 +3,7 @@
 import typer
 
 from cli.search_cmd import display_results, run_search
+from cli.status_cmd import show_status
 from cli.sync import sync_all_connected, sync_single_platform
 from utils.config import Config
 from utils.console import console
@@ -70,7 +71,9 @@ def sync(platform: str, file: str = typer.Option(None, "--file", "--path")) -> N
 @app.command()
 def status() -> None:
     """Show platform sync status."""
-    typer.echo("not yet implemented")
+    if config is None:
+        raise RuntimeError("Config not loaded.")
+    show_status(config)
 
 
 @app.command()

@@ -98,7 +98,7 @@ def sync_primary_platforms(platform: str, file_path: str | None = None) -> list[
 def sync_and_index_primary(platform: str, file_path: str | None = None) -> int:
     """Sync one primary platform and insert its new messages."""
     messages = sync_primary_platforms(platform, file_path=file_path)
-    inserted = insert_messages(messages)
+    inserted = insert_messages(messages, platform_label=platform)
     console.print(f"[green]Synced {platform}: indexed {inserted} new messages.[/green]")
     return inserted
 
@@ -150,7 +150,7 @@ def sync_and_index_guided(platform: str, file_path: str | None = None) -> int:
     if not messages:
         console.print(f"[yellow]No new data synced for {platform}.[/yellow]")
         return 0
-    inserted = insert_messages(messages)
+    inserted = insert_messages(messages, platform_label=platform)
     console.print(f"[green]Synced {platform}: indexed {inserted} new messages.[/green]")
     return inserted
 

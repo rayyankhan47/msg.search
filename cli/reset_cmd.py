@@ -10,7 +10,7 @@ import typer
 from core.database import get_collection
 from utils.config import Config
 from utils.console import console
-from utils.storage import RAW_DIR
+from utils.storage import RAW_DIR, init_data_dir
 
 
 def reset_platform(config: Config, platform: str) -> None:
@@ -59,5 +59,5 @@ def reset_all(data_dir: Path) -> None:
 
     if data_dir.exists():
         shutil.rmtree(data_dir)
-    data_dir.mkdir(parents=True, exist_ok=True)
+    init_data_dir()
     console.print("[green]All data deleted.[/green]")

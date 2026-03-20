@@ -1,0 +1,43 @@
+{
+  "chats": {
+    "list": [
+      {
+        "id": 1001,
+        "name": "Weekend Plans",
+        "messages": [
+          {
+            "id": 1,
+            "date": "2024-01-10T12:34:00",
+            "from": "Ava",
+            "text": "Try that pasta place downtown."
+          },
+          {
+            "id": 2,
+            "date": "2024-01-11T09:00:00",
+            "from": "Noah",
+            "text": [
+              {
+                "type": "plain",
+                "text": "Meet "
+              },
+              "at 7?"
+            ]
+          },
+          {
+            "id": 3,
+            "date": "2024-01-11T10:00:00",
+            "from": "Noah",
+            "text": "Forwarded tip",
+            "forwarded_from": "Liam"
+          },
+          {
+            "id": 4,
+            "date": "2024-01-11T10:05:00",
+            "from": "Noah",
+            "text": ""
+          }
+        ]
+      }
+    ]
+  }
+}

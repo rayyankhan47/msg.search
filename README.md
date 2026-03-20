@@ -206,5 +206,5 @@ Practical expectation target for v1:
 
 ## Status
 
-Active development. See `project_plan.md` for build phases and progress.
+Active development. See `CONTRIBUTING.md` for details for contributions!
 

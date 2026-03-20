@@ -55,7 +55,7 @@ def search(
                 "or syncing more platforms.[/yellow]"
             )
         return
-    display_results(results)
+    display_results(results, query=query)
 
 
 @app.command()

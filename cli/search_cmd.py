@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from rich.panel import Panel
 from rich.text import Text
 
@@ -29,7 +31,15 @@ def run_search(
     )
 
 
-def display_results(results: list[dict]) -> None:
+def _highlight_content(content: str, query: str) -> str:
+    terms = [term for term in re.findall(r"\w+", query) if len(term) >= 3]
+    if not terms:
+        return content
+    pattern = re.compile("|".join(re.escape(term) for term in terms), flags=re.IGNORECASE)
+    return pattern.sub(lambda m: f"[bold yellow]{m.group(0)}[/bold yellow]", content)
+
+
+def display_results(results: list[dict], query: str) -> None:
     """Render search results in Rich panels."""
     for idx, result in enumerate(results, start=1):
         platform = str(result.get("platform", "unknown")).lower()
@@ -42,7 +52,7 @@ def display_results(results: list[dict]) -> None:
 
         body = (
             f"[bold]Conversation:[/bold] {result.get('conversation', 'Unknown')}\n"
-            f"{result.get('content', '')}\n"
+            f"{_highlight_content(str(result.get('content', '')), query)}\n"
             f"[dim]Score: {result.get('score', 0):.4f}[/dim]"
         )
         console.print(Panel(body, title=header, border_style=color))

@@ -1,12 +1,13 @@
 # msg.search (`msgsearch`)
 
-Search your personal message history across platforms, locally.
+Search your personal message history across platforms, locally and privately.
 
-- **Private by default**: messages stay on your machine
-- **Offline-first**: works without internet after first model download
-- **Semantic search**: find messages by meaning, not just keywords
+- Local-first by default
+- Semantic search over message content
+- Metadata filters for sender/date/platform
+- No cloud backend required for core usage
 
-## Supported platforms (v1)
+## Platforms
 
 <p>
   <img src="https://cdn.simpleicons.org/telegram" height="18" alt="Telegram" /> Telegram
@@ -22,59 +23,82 @@ Search your personal message history across platforms, locally.
   <img src="https://cdn.simpleicons.org/discord" height="18" alt="Discord" /> Discord
 </p>
 
-## Install
+## Privacy
 
-Requirements:
-- Python 3.10+
+- Your messages stay on your machine
+- Embeddings and vector index are stored locally in `~/.msgsearch/`
+- No telemetry or analytics in normal operation
+- Deleting `~/.msgsearch/` removes all indexed data
 
-Setup:
+## Requirements
+
+- Python `3.10+`
+- macOS required for iMessage support
+- One-time model download on first embedding run
+
+## Installation
 
 ```bash
+git clone https://github.com/yourusername/msg.search
+cd msg.search
 pip install -r requirements.txt
+pip install -e .
 ```
 
-## Quickstart
+## Quick Start
 
-Index messages (first time) or update the index (later):
+1) Sync a platform:
 
 ```bash
-msgsearch sync imessage
 msgsearch sync telegram
-msgsearch sync whatsapp
-msgsearch sync instagram
-msgsearch sync messenger
-msgsearch sync discord
-
-msgsearch sync all
+msgsearch sync imessage
+msgsearch sync whatsapp --file /path/to/export.zip
 ```
 
-Search:
+2) Search your messages:
 
 ```bash
-msgsearch search "restaurant recommendation"
-msgsearch search "job offer" --from "Sarah" --platform imessage --after 2020-01-01
+msgsearch search "that pasta place"
+msgsearch search "job offer" --platform telegram --from "Sarah"
+msgsearch search "address" --after 2023-01-01 --before 2023-12-31
 ```
 
-See what is connected:
+3) Check platform status:
 
 ```bash
 msgsearch status
 ```
 
-Wipe indexed data:
+4) Reset indexed data (if needed):
 
 ```bash
-msgsearch reset
 msgsearch reset --platform telegram
+msgsearch reset
 ```
 
-## Notes
+## CLI Reference
 
-- **Data location**: everything is stored in `~/.msgsearch/`. Delete that folder to remove all indexed data.
-- **iMessage on macOS**: you may need to grant your terminal Full Disk Access to read `~/Library/Messages/chat.db`.
-- **Discord exports**: `msgsearch` only reads a local export file you provide. It does not call Discord APIs or request tokens.
+```bash
+msgsearch sync <platform> [--file PATH]
+msgsearch sync all
+msgsearch search "<query>" [--platform P] [--from NAME] [--after DATE] [--before DATE] [--limit N]
+msgsearch status
+msgsearch reset [--platform P]
+```
+
+## Data Directory
+
+`msgsearch` stores local state in:
+
+```text
+~/.msgsearch/
+  db/
+  raw/
+  logs/
+  config.json
+```
 
 ## Status
 
-Work in progress. The interface above is the target CLI.
+Active development. See `project_plan.md` for build phases and progress.
 

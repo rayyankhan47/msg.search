@@ -39,6 +39,7 @@ def search_messages(
     """Run semantic search over indexed messages."""
     if not query.strip():
         return []
+    limit = max(1, limit)
 
     embedder = Embedder()
     query_embedding = embedder.embed([query])[0]
@@ -61,6 +62,7 @@ def search_messages(
 
     output: list[dict] = []
     for document, metadata, distance in zip(documents, metadatas, distances):
+        score = 1 - float(distance)
         output.append(
             {
                 "content": document,
@@ -68,8 +70,9 @@ def search_messages(
                 "timestamp": metadata.get("timestamp", ""),
                 "platform": metadata.get("platform", ""),
                 "conversation": metadata.get("conversation", ""),
-                "score": 1 - float(distance),
+                "score": score,
             }
         )
 
-    return output
+    output.sort(key=lambda item: item["score"], reverse=True)
+    return output[:limit]

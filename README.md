@@ -98,6 +98,93 @@ msgsearch reset [--platform P]
   config.json
 ```
 
+## Platform Sync Instructions
+
+### Telegram (auto-connect, recommended)
+
+```bash
+msgsearch sync telegram
+```
+
+On first run, you authenticate with phone number + OTP (and 2FA password if enabled).  
+`msgsearch` stores a local Telegram session under `~/.msgsearch/telegram_session/` and reuses it.
+
+If needed, Telegram export-file fallback is still supported via `--file`.
+
+### iMessage (auto-connect on macOS)
+
+```bash
+msgsearch sync imessage
+```
+
+If access fails, grant Full Disk Access to your terminal:
+
+- System Settings -> Privacy & Security -> Full Disk Access
+- Add your terminal app, then run sync again
+
+### WhatsApp (manual export)
+
+1. In WhatsApp, export a chat as `.txt` (or ZIP if available)
+2. Run:
+
+```bash
+msgsearch sync whatsapp --file /path/to/export.txt
+```
+
+or
+
+```bash
+msgsearch sync whatsapp --file /path/to/export.zip
+```
+
+### Instagram (Meta export)
+
+1. Instagram -> Settings -> Your Activity -> Download Your Information
+2. Request export with:
+   - Format: JSON
+   - Scope: Messages
+3. Wait for Meta email
+4. Run:
+
+```bash
+msgsearch sync instagram --file /path/to/export.zip
+```
+
+### Messenger (Meta export)
+
+1. Facebook -> Settings -> Your Information -> Download Your Information
+2. Request export with:
+   - Format: JSON
+   - Scope: Messages
+3. Wait for Meta email
+4. Run:
+
+```bash
+msgsearch sync messenger --file /path/to/export.zip
+```
+
+Meta exports can take hours to days depending on account size.
+
+### Discord (local JSON file only)
+
+1. Ensure you already have a Discord DM export JSON in DiscordChatExporter-compatible format
+2. Run:
+
+```bash
+msgsearch sync discord --file /path/to/export.json
+```
+
+`msgsearch` validates local file format, then indexes messages.
+
+## Discord & Terms of Service
+
+`msgsearch` does **not** connect to Discord APIs, does **not** request tokens, and does **not** perform exports.  
+It only reads a local JSON file you provide.
+
+Exporting Discord messages with third-party tools may violate Discord Terms of Service.  
+The creator of `msg.search` does not endorse or facilitate ToS violations.  
+You are fully responsible for how your export file was obtained.
+
 ## Status
 
 Active development. See `project_plan.md` for build phases and progress.

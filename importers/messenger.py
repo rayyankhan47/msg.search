@@ -7,3 +7,7 @@ class MessengerImporter(MetaZipImporterBase):
     """Parse Facebook Messenger message exports from a ZIP file."""
 
     platform = "messenger"
+    inbox_prefixes = (
+        "messages/inbox/",
+        "your_facebook_activity/messages/inbox/",
+    )

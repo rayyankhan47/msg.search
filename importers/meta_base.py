@@ -14,7 +14,7 @@ class MetaZipImporterBase:
     """Base parser for Meta ZIP exports with message_*.json files."""
 
     platform = "meta"
-    inbox_prefix = "messages/inbox/"
+    inbox_prefixes = ("messages/inbox/",)
 
     @staticmethod
     def _decode_meta_text(value: str) -> str:
@@ -33,7 +33,7 @@ class MetaZipImporterBase:
                 [
                     name
                     for name in archive.namelist()
-                    if name.startswith(self.inbox_prefix)
+                    if any(name.startswith(prefix) for prefix in self.inbox_prefixes)
                     and name.endswith(".json")
                     and "/message_" in name
                 ]

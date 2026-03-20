@@ -7,6 +7,7 @@ from rich.table import Table
 from core.database import get_collection
 from utils.config import Config
 from utils.console import console
+from utils.colors import PLATFORM_COLORS
 
 
 SUPPORTED_PLATFORMS = [
@@ -36,6 +37,7 @@ def show_status(config: Config) -> None:
         last = last_sync.get(platform, "-")
         result = collection.get(where={"platform": {"$eq": platform}}, include=[])
         count = len(result.get("ids", []))
-        table.add_row(platform, is_connected, last, str(count))
+        color = PLATFORM_COLORS.get(platform, "white")
+        table.add_row(f"[{color}]{platform}[/{color}]", is_connected, last, str(count))
 
     console.print(table)

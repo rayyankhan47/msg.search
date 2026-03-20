@@ -6,17 +6,8 @@ from rich.panel import Panel
 from rich.text import Text
 
 from search.query import search_messages
+from utils.colors import PLATFORM_COLORS
 from utils.console import console
-
-
-PLATFORM_COLORS = {
-    "telegram": "cyan",
-    "whatsapp": "green",
-    "imessage": "blue",
-    "instagram": "magenta",
-    "messenger": "bright_blue",
-    "discord": "purple",
-}
 
 
 def run_search(

@@ -21,3 +21,4 @@ msgsearch = "main:app"
 
 [tool.setuptools]
 py-modules = ["main"]
+packages = ["cli", "core", "importers", "search", "utils"]

@@ -36,7 +36,9 @@ class TelegramClientManager:
             raise TelegramAuthError("TELEGRAM_API_ID must be an integer.") from exc
         return api_id, self.api_hash
 
-    async def _fetch_messages_async(self, limit_per_chat: int = 2000) -> list[dict[str, Any]]:
+    async def _fetch_messages_async(
+        self, limit_per_chat: int = 2000, max_dialogs: int | None = None
+    ) -> list[dict[str, Any]]:
         api_id, api_hash = self._validate_credentials()
 
         try:
@@ -65,7 +67,11 @@ class TelegramClientManager:
                 await client.sign_in(password=password)
 
         output: list[dict[str, Any]] = []
+        dialog_count = 0
         async for dialog in client.iter_dialogs():
+            if max_dialogs is not None and dialog_count >= max_dialogs:
+                break
+            dialog_count += 1
             chat_id = str(getattr(dialog.entity, "id", dialog.name))
             conversation = dialog.name or "Telegram chat"
             async for message in client.iter_messages(dialog.entity, limit=limit_per_chat):
@@ -93,9 +99,14 @@ class TelegramClientManager:
                     }
                 )
 
+        output.sort(key=lambda m: (m.get("timestamp", ""), m.get("id", "")))
         await client.disconnect()
         return output
 
-    def fetch_messages(self, limit_per_chat: int = 2000) -> list[dict[str, Any]]:
+    def fetch_messages(
+        self, limit_per_chat: int = 2000, max_dialogs: int | None = None
+    ) -> list[dict[str, Any]]:
         """Authenticate if needed and fetch Telegram history."""
-        return asyncio.run(self._fetch_messages_async(limit_per_chat=limit_per_chat))
+        return asyncio.run(
+            self._fetch_messages_async(limit_per_chat=limit_per_chat, max_dialogs=max_dialogs)
+        )

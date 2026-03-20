@@ -3,6 +3,7 @@
 import typer
 
 from cli.search_cmd import display_results, run_search
+from cli.reset_cmd import reset_all, reset_platform
 from cli.status_cmd import show_status
 from cli.sync import sync_all_connected, sync_single_platform
 from utils.config import Config
@@ -79,7 +80,15 @@ def status() -> None:
 @app.command()
 def reset(platform: str = typer.Option(None, "--platform")) -> None:
     """Reset indexed data."""
-    typer.echo("not yet implemented")
+    global config  # pylint: disable=global-statement
+    if config is None:
+        raise RuntimeError("Config not loaded.")
+    if platform:
+        reset_platform(config, platform.lower().strip())
+        return
+    reset_all(DATA_DIR)
+    # Re-load empty config file after full reset.
+    config = Config()
 
 
 if __name__ == "__main__":
